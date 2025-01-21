@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>photo-album-icon-png-3.ico</ApplicationIcon>
+    <PackageIcon>photo-album-icon-png-3.jpg</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="slide-show-icon-15.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="photo-album-icon-png-3.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WpfScreenHelper" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="photo-album-icon-png-3.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="photo-album-icon-png-3.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
