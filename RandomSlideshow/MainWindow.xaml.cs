@@ -64,17 +64,6 @@ namespace RandomSlideshow
         }
 
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct MonitorInfoStruct
-        {
-            public int Size;
-            public RECT Monitor;
-            public RECT Work;
-            public uint Flags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string DeviceName;
-        }
-
         private delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdcMonitor, IntPtr lprcMonitor, IntPtr dwData);
 
         public MainWindow()
@@ -162,7 +151,7 @@ namespace RandomSlideshow
             //await DisplayRandomImageAsync();
         }
         // Preload the next image asynchronously
-        private async void PreloadNextImage()
+        private async Task PreloadNextImage()
         {
             if (isImageLoading) return; // Avoid multiple simultaneous image loading tasks
             isImageLoading = true;
@@ -240,45 +229,6 @@ namespace RandomSlideshow
 
             isImageLoading = false;
         }
-        // Asynchronously load and display a random image
-        private async Task DisplayRandomImageAsync()
-        {
-            try
-            {
-                string randomImageFile = await Task.Run(() => GetRandomImageFile());
-
-                if (!string.IsNullOrEmpty(randomImageFile))
-                {
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(randomImageFile);
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-
-                    // Apply EXIF rotation to the bitmap before filtering
-                    var adjustedBitmap = ApplyRotationIfNeeded(bitmap);
-
-                    // Apply filtering based on orientation
-                    //if (ShouldDisplayImage(bitmap)) // Check the filter
-                    //{
-                        SlideshowImage.Source = nextImageBuffer; // Set the image source
-
-                        if (fullscreenWindow == null)
-                            StartFullscreenSlideshow(nextImageBuffer);
-                        else
-                            fullscreenWindow.DisplayImage(nextImageBuffer);
-                    //}
-                    //else
-                    //{
-                     //   await DisplayRandomImageAsync(); // If image does not match, load another
-                    //}
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error loading image: {ex.Message}");
-            }
-        }
 
         // Start the fullscreen slideshow on the selected monitor
         private void StartFullscreenSlideshow(BitmapImage image)
@@ -355,18 +305,6 @@ namespace RandomSlideshow
 
             // Rotate the bitmap frame
             var transformedBitmap = new TransformedBitmap(bitmapFrame, new RotateTransform(rotationAngle));
-
-            // Convert the transformed bitmap back to a BitmapImage
-            return ConvertTransformedBitmapToBitmapImage(transformedBitmap);
-        }
-        // Helper method to rotate an image
-        private BitmapImage RotateImage(BitmapFrame bitmapFrame, int angle)
-        {
-            TransformedBitmap transformedBitmap = new TransformedBitmap();
-            transformedBitmap.BeginInit();
-            transformedBitmap.Source = bitmapFrame;
-            transformedBitmap.Transform = new RotateTransform(angle);
-            transformedBitmap.EndInit();
 
             // Convert the transformed bitmap back to a BitmapImage
             return ConvertTransformedBitmapToBitmapImage(transformedBitmap);
@@ -450,7 +388,7 @@ namespace RandomSlideshow
                 selectedFolder = Path.GetDirectoryName(dialog.FileName);
                 //StartSlideshow();
                 RefreshImageList();
-                PreloadNextImage();
+                //PreloadNextImage();
             }
         }
 
@@ -480,7 +418,10 @@ namespace RandomSlideshow
             isSlideshowRunning = true;
             StartShowButton.Content = "Stop Slideshow"; // Update button text
             PreventSleep(); // Prevent the system from sleeping
-            PreloadNextImage();
+            //await PreloadNextImage();
+
+            // Call the tick handler manually to trigger the first tick immediately
+            SlideshowTimer_Tick(null, EventArgs.Empty);
             slideshowTimer.Start(); // Start the slideshow timer
         }
 
@@ -574,6 +515,7 @@ namespace RandomSlideshow
             }
             finally
             {
+                await PreloadNextImage();
                 RefreshButton.IsEnabled = true;
                 StartShowButton.IsEnabled = true;
                 ProgressLabel.Content = "Enumeration complete.";
